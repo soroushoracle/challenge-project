@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
+import { MailModule } from './mail/mail.module'
 
 @Module({
     imports: [
@@ -17,6 +18,7 @@ import { TypeOrmModule } from '@nestjs/typeorm'
             autoLoadEntities: true,
             synchronize: true,
         }),
+        MailModule,
     ],
 })
 export class AppModule {}
