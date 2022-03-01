@@ -3,7 +3,7 @@ import { Observable } from 'rxjs'
 import { map } from 'rxjs/operators'
 
 export interface Response<T> {
-    code: number
+    statusCode: number
     data: T
     message: string
 }
@@ -13,7 +13,7 @@ export class ResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
     intercept(context: ExecutionContext, next: CallHandler): Observable<Response<T>> {
         return next.handle().pipe(
             map(({ data, message }) => ({
-                code: context.switchToHttp().getResponse().statusCode,
+                statusCode: context.switchToHttp().getResponse().statusCode,
                 data,
                 message,
             })),
