@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { MailService } from 'src/mail/mail.service'
 import { CompleteUserDto } from './dto/complete-user.dto'
@@ -16,16 +16,20 @@ export class AuthService {
         private mailService: MailService,
         @InjectRepository(UserRepository)
         private userRepository: UserRepository,
+        private readonly logger: Logger,
     ) {}
 
     async signIn(signInDto: SignInDto): Promise<User> {
         const { email } = signInDto
         let user = await this.userRepository.findOne({ email }, { relations: ['verificationCode'] })
         if (user) {
-            if (this.isCodeValid(user.verificationCode.expiredAt))
+            if (this.isCodeValid(user.verificationCode.expiredAt)) {
+                this.logger.error(`The ${email} email address already received a verification code.`)
                 throw new BadRequestException('You already received a code.')
+            }
         } else {
             user = await this.userRepository.create({ email })
+            this.logger.log(`An user with ${email} email address created.`)
         }
         this.setVerificationCode(user)
         await this.userRepository.save(user)
@@ -38,9 +42,11 @@ export class AuthService {
         const user = await this.userRepository.findOne({ email }, { relations: ['verificationCode'] })
         const { verificationCode } = user
         if (!this.isCodeValid(verificationCode.expiredAt)) {
+            this.logger.error(`The verification code of ${email} email address is expired!`)
             throw new BadRequestException('Your code is expired!')
         }
         if (code !== verificationCode.code) {
+            this.logger.error(`An invalid request was submitted from the ${email} email`)
             throw new BadRequestException('Invalid credentials!')
         }
         user.emailConfirmation = true
@@ -54,6 +60,7 @@ export class AuthService {
         user.family = family
         user.salt = await bcrypt.genSalt()
         user.password = await this.hashedPassword(password, user.salt)
+        this.logger.log(`The user with ${user.email} email address completed registering.`)
         return await this.userRepository.save(user)
     }
 
@@ -66,9 +73,11 @@ export class AuthService {
         const { email, password } = loginUserDto
         const user = await this.userRepository.findByEmail(email)
         if (!user.emailConfirmation) {
+            this.logger.error(`The user with ${email} does not completed registering yet.`)
             throw new ForbiddenException('You must first confirm your email')
         }
         if (!(await bcrypt.compare(password, user.password))) {
+            this.logger.error(`An invalid request was submitted from the ${email} email`)
             throw new BadRequestException('Invalid credentials!')
         }
         return user

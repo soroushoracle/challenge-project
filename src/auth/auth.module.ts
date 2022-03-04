@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { Logger, Module } from '@nestjs/common'
 import { AuthService } from './auth.service'
 import { MailModule } from 'src/mail/mail.module'
 import { TypeOrmModule } from '@nestjs/typeorm'
@@ -25,7 +25,7 @@ import { JWTStrategy } from './jwt.strategy'
             inject: [ConfigService],
         }),
     ],
-    providers: [AuthService, JWTStrategy],
+    providers: [AuthService, JWTStrategy, Logger],
     controllers: [AuthController],
     exports: [JWTStrategy, PassportModule],
 })
