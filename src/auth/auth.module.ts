@@ -8,6 +8,7 @@ import { VerificationCode } from './entities/verification-code.entity'
 import { PassportModule } from '@nestjs/passport'
 import { JwtModule } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
+import { JWTStrategy } from './jwt.strategy'
 
 @Module({
     imports: [
@@ -24,7 +25,8 @@ import { ConfigService } from '@nestjs/config'
             inject: [ConfigService],
         }),
     ],
-    providers: [AuthService],
+    providers: [AuthService, JWTStrategy],
     controllers: [AuthController],
+    exports: [JWTStrategy, PassportModule],
 })
 export class AuthModule {}
