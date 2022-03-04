@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common'
+import { Logger, Module } from '@nestjs/common'
+import { WinstonModule } from 'nest-winston'
 import { ConfigModule } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { MailModule } from './mail/mail.module'
@@ -9,6 +10,7 @@ import { AuthModule } from './auth/auth.module'
         ConfigModule.forRoot({
             isGlobal: true,
         }),
+        WinstonModule.forRoot({}),
         TypeOrmModule.forRoot({
             type: 'postgres',
             host: process.env.DATABASE_HOST,
@@ -22,5 +24,6 @@ import { AuthModule } from './auth/auth.module'
         MailModule,
         AuthModule,
     ],
+    providers: [Logger],
 })
 export class AppModule {}
