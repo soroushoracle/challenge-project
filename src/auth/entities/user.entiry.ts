@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer'
 import {
     Column,
     CreateDateColumn,
@@ -27,6 +28,7 @@ export class User {
     emailConfirmation: boolean
 
     @Column({ nullable: true })
+    @Exclude({ toPlainOnly: true })
     password: string
 
     @OneToOne(() => VerificationCode, (code) => code.user, { cascade: true })
@@ -38,4 +40,8 @@ export class User {
 
     @UpdateDateColumn({ type: 'timestamp' })
     updatedAt: Date
+
+    constructor(partial: Partial<User>) {
+        Object.assign(this, partial)
+    }
 }
