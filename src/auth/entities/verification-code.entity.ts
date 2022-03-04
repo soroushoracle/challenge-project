@@ -6,7 +6,7 @@ export class VerificationCode {
     @PrimaryGeneratedColumn('increment')
     id: number
 
-    @Column()
+    @Column({ nullable: true })
     code: string
 
     @Column({ type: 'timestamp' })
