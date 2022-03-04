@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseInterceptors } from '@nestjs/common'
+import { Body, Controller, HttpCode, Post, UseInterceptors } from '@nestjs/common'
 import { ResponseInterceptor } from 'src/response.interceptor'
 import { AuthService } from './auth.service'
 import { SignInDto } from './dto/sign-in.dto'
@@ -9,12 +9,15 @@ export class AuthController {
     constructor(private authService: AuthService) {}
 
     @Post('/sign-in')
+    @HttpCode(200)
     async signIn(@Body() signInDto: SignInDto) {
-        const { email } = signInDto
-        await this.authService.signIn(email)
+        const user = await this.authService.signIn(signInDto)
         return {
-            data: { email },
-            message: `The verification code sent to ${email} email address.`,
+            data: {
+                email: user.email,
+                expiredAt: user.verificationCode.expiredAt,
+            },
+            message: `The verification code sent to ${signInDto.email} email address.`,
         }
     }
 }
