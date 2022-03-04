@@ -17,6 +17,7 @@ import { VerifyEmailDto } from './dto/verify-email.dto'
 import { JwtPayload } from './jwt-payload.interface'
 import { AuthGuard } from '@nestjs/passport'
 import { CompleteUserDto } from './dto/complete-user.dto'
+import { LoginUserDto } from './dto/login-user.dto'
 
 @Controller('auth')
 @UseInterceptors(ResponseInterceptor)
@@ -60,6 +61,16 @@ export class AuthController {
                 user: await this.authService.completeUser(user.id, completeUserDto),
             },
             message: 'The User completed',
+        }
+    }
+
+    @Post('login')
+    async login(@Body() loginUserDto: LoginUserDto) {
+        const user = await this.authService.loginUser(loginUserDto)
+        const payload: JwtPayload = { id: user.id }
+        return {
+            data: { token: await this.jwtService.sign(payload) },
+            message: 'Welcome to service :)',
         }
     }
 }

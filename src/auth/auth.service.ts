@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { MailService } from 'src/mail/mail.service'
 import { CompleteUserDto } from './dto/complete-user.dto'
@@ -8,6 +8,7 @@ import { User } from './entities/user.entiry'
 import { VerificationCode } from './entities/verification-code.entity'
 import { UserRepository } from './repositories/user.repository'
 import * as bcrypt from 'bcrypt'
+import { LoginUserDto } from './dto/login-user.dto'
 
 @Injectable()
 export class AuthService {
@@ -59,6 +60,18 @@ export class AuthService {
     async cleanVerificationCode(user: User): Promise<User> {
         user.verificationCode.code = null
         return await this.userRepository.save(user)
+    }
+
+    async loginUser(loginUserDto: LoginUserDto): Promise<User> {
+        const { email, password } = loginUserDto
+        const user = await this.userRepository.findByEmail(email)
+        if (!user.emailConfirmation) {
+            throw new ForbiddenException('You must first confirm your email')
+        }
+        if (!(await bcrypt.compare(password, user.password))) {
+            throw new BadRequestException('Invalid credentials!')
+        }
+        return user
     }
 
     private async hashedPassword(password: string, salt: string): Promise<string> {
