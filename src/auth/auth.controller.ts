@@ -4,6 +4,7 @@ import { AuthService } from './auth.service'
 import { JwtService } from '@nestjs/jwt'
 import { SignInDto } from './dto/sign-in.dto'
 import { VerifyEmailDto } from './dto/verify-email.dto'
+import { JwtPayload } from './jwt-payload.interface'
 
 @Controller('auth')
 @UseInterceptors(ResponseInterceptor)
@@ -28,8 +29,9 @@ export class AuthController {
     async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
         const user = await this.authService.verifyEmail(verifyEmailDto)
         this.authService.cleanVerificationCode(user)
+        const payload: JwtPayload = { id: user.id }
         return {
-            data: { token: await this.jwtService.sign({ id: user.id }) },
+            data: { token: await this.jwtService.sign(payload) },
             message: 'Welcome to service :)',
         }
     }
