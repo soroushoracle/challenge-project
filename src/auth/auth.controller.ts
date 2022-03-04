@@ -1,13 +1,14 @@
 import { Body, Controller, HttpCode, Post, UseInterceptors } from '@nestjs/common'
 import { ResponseInterceptor } from 'src/response.interceptor'
 import { AuthService } from './auth.service'
+import { JwtService } from '@nestjs/jwt'
 import { SignInDto } from './dto/sign-in.dto'
 import { VerifyEmailDto } from './dto/verify-email.dto'
 
 @Controller('auth')
 @UseInterceptors(ResponseInterceptor)
 export class AuthController {
-    constructor(private authService: AuthService) {}
+    constructor(private authService: AuthService, private jwtService: JwtService) {}
 
     @Post('/sign-in')
     @HttpCode(200)
@@ -26,9 +27,9 @@ export class AuthController {
     @HttpCode(200)
     async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
         const user = await this.authService.verifyEmail(verifyEmailDto)
-        await this.authService.cleanVerificationCode(user)
+        this.authService.cleanVerificationCode(user)
         return {
-            data: { token: '' },
+            data: { token: await this.jwtService.sign({ id: user.id }) },
             message: 'Welcome to service :)',
         }
     }
