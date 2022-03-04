@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { MailService } from 'src/mail/mail.service'
+import { CompleteUserDto } from './dto/complete-user.dto'
 import { SignInDto } from './dto/sign-in.dto'
 import { VerifyEmailDto } from './dto/verify-email.dto'
 import { User } from './entities/user.entiry'
@@ -40,7 +41,17 @@ export class AuthService {
         if (code !== verificationCode.code) {
             throw new BadRequestException('Invalid credentials!')
         }
-        return user
+        user.emailConfirmation = true
+        return this.userRepository.save(user)
+    }
+
+    async completeUser(id: number, completeUserDto: CompleteUserDto): Promise<User> {
+        const { name, family, password } = completeUserDto
+        const user = await this.userRepository.findById(id)
+        user.name = name
+        user.family = family
+        user.password = password
+        return await this.userRepository.save(user)
     }
 
     async cleanVerificationCode(user: User): Promise<User> {
