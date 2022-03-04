@@ -2,6 +2,7 @@ import { Body, Controller, HttpCode, Post, UseInterceptors } from '@nestjs/commo
 import { ResponseInterceptor } from 'src/response.interceptor'
 import { AuthService } from './auth.service'
 import { SignInDto } from './dto/sign-in.dto'
+import { VerifyEmailDto } from './dto/verify-email.dto'
 
 @Controller('auth')
 @UseInterceptors(ResponseInterceptor)
@@ -18,6 +19,17 @@ export class AuthController {
                 expiredAt: user.verificationCode.expiredAt,
             },
             message: `The verification code sent to ${signInDto.email} email address.`,
+        }
+    }
+
+    @Post('verify-email')
+    @HttpCode(200)
+    async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
+        const user = await this.authService.verifyEmail(verifyEmailDto)
+        await this.authService.cleanVerificationCode(user)
+        return {
+            data: { token: '' },
+            message: 'Welcome to service :)',
         }
     }
 }
