@@ -7,6 +7,7 @@ import { VerifyEmailDto } from './dto/verify-email.dto'
 import { User } from './entities/user.entiry'
 import { VerificationCode } from './entities/verification-code.entity'
 import { UserRepository } from './repositories/user.repository'
+import * as bcrypt from 'bcrypt'
 
 @Injectable()
 export class AuthService {
@@ -18,7 +19,7 @@ export class AuthService {
 
     async signIn(signInDto: SignInDto): Promise<User> {
         const { email } = signInDto
-        let user = await this.findUserByEmail(email, ['verificationCode'])
+        let user = await this.userRepository.findOne({ email }, { relations: ['verificationCode'] })
         if (user) {
             if (this.isCodeValid(user.verificationCode.expiredAt))
                 throw new BadRequestException('You already received a code.')
@@ -33,7 +34,7 @@ export class AuthService {
 
     async verifyEmail(verifyEmailDto: VerifyEmailDto): Promise<User> {
         const { email, code } = verifyEmailDto
-        const user = await this.findUserByEmail(email, ['verificationCode'])
+        const user = await this.userRepository.findOne({ email }, { relations: ['verificationCode'] })
         const { verificationCode } = user
         if (!this.isCodeValid(verificationCode.expiredAt)) {
             throw new BadRequestException('Your code is expired!')
@@ -50,7 +51,8 @@ export class AuthService {
         const user = await this.userRepository.findById(id)
         user.name = name
         user.family = family
-        user.password = password
+        user.salt = await bcrypt.genSalt()
+        user.password = await this.hashedPassword(password, user.salt)
         return await this.userRepository.save(user)
     }
 
@@ -59,12 +61,8 @@ export class AuthService {
         return await this.userRepository.save(user)
     }
 
-    private async findUserByEmail(email: string, relations?: [string]): Promise<User> {
-        const user = await this.userRepository.findOne({ email }, { relations })
-        if (!user) {
-            throw new NotFoundException('The user not found')
-        }
-        return user
+    private async hashedPassword(password: string, salt: string): Promise<string> {
+        return await bcrypt.hash(password, salt)
     }
 
     private isCodeValid(expiredAt: Date): boolean {

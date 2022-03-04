@@ -31,6 +31,10 @@ export class User {
     @Exclude({ toPlainOnly: true })
     password: string
 
+    @Exclude({ toPlainOnly: true })
+    @Column({ nullable: true })
+    salt: string
+
     @OneToOne(() => VerificationCode, (code) => code.user, { cascade: true })
     @JoinColumn({ name: 'verification_code' })
     verificationCode: VerificationCode
