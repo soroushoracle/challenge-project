@@ -1,0 +1,45 @@
+version: '3.3'
+services:
+    dev:
+        container_name: jabana_challenge
+        image: nestjs-api-dev:1.0.0
+        build:
+            context: .
+            dockerfile: ./Dockerfile
+        command: npm run start:dev
+        ports:
+            - 3000:3000
+        volumes:
+            - .:/usr/src/app
+            - /usr/src/app/node_modules
+        restart: unless-stopped
+        environment:
+            - HOST_PORT=3000
+            - DATABASE_HOST=jabama_postgres
+            - DATABASE_PORT=5432
+            - DATABASE_NAME=postgres
+            - DATABASE_USERNAME=postgres
+            - DATABASE_PASSWORD=postgres
+            - MAIL_HOST=smtp.gmail.com
+            - MAIL_PORT=587
+            - MAIL_AUTH_USER=
+            - MAIL_AUTH_PASSWORD=
+            - MAIL_FROM=
+            - MAIL_SUBJECT="JaBaMa Your Verification Code"
+            - JWT_SECRET_KEY=SoR0uS8OS!
+        depends_on:
+            - jabama_postgres
+    jabama_postgres:
+        image: postgres:14.1-alpine
+        environment:
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=postgres
+            - POSTGRES_DB=postgres
+        volumes:
+            - ./pgdata:/var/lib/postgresql/data
+        container_name: jabama_postgres
+        ports:
+            - '5432:5432'
+        restart: always
+networks:
+    pgdata: {}
